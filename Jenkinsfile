@@ -36,7 +36,7 @@ pipeline {
       steps {
         withCredentials([[
           $class: 'AmazonWebServicesCredentialsBinding',
-          credentialsId: 'aws-ecr-creds'
+          credentialsId: 'aws-cred'
         ]]) {
           sh '''
             aws --version
