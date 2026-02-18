@@ -2,12 +2,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: enterprise-app
-  namespace: prod
+  namespace: dev
 spec:
   replicas: 2
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
   selector:
     matchLabels:
       app: enterprise-app
+
   template:
     metadata:
       labels:
@@ -19,3 +27,22 @@ spec:
         ports:
         - containerPort: 5000
 
+        # Liveness Probe: restarts container if app is stuck/broken
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        # Readiness Probe: controls when pod gets traffic
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
