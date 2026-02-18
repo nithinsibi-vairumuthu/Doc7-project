@@ -31,28 +31,37 @@ pipeline {
       }
     }
 
-    stage('Login to ECR') {
+   stage('Login to ECR') {
       steps {
-        withCredentials([
-          string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
-          string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
-        ]) {
-          sh '''
-            aws ecr get-login-password --region ap-south-1 | \
-            docker login --username AWS --password-stdin 730335674713.dkr.ecr.ap-south-1.amazonaws.com
-          '''
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-ecr-creds'
+              ]]) {
+                    sh '''
+                     aws --version
+                     aws ecr get-login-password --region ap-south-1 | \
+                     docker login --username AWS --password-stdin 730335674713.dkr.ecr.ap-south-1.amazonaws.com
+                    '''
         }
       }
     }
 
-    stage('Tag & Push Image') {
-      steps {
-        sh '''
-          docker tag enterprise-cicd-app:${IMAGE_TAG} 730335674713.dkr.ecr.ap-south-1.amazonaws.com/enterprise-cicd-app:${IMAGE_TAG}
-          docker push 730335674713.dkr.ecr.ap-south-1.amazonaws.com/enterprise-cicd-app:${IMAGE_TAG}
-        '''
+   stage('Login to ECR') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-ecr-creds'
+        ]]) {
+            sh '''
+              aws --version
+              aws ecr get-login-password --region ap-south-1 | \
+              docker login --username AWS --password-stdin 730335674713.dkr.ecr.ap-south-1.amazonaws.com
+            '''
+        }
       }
-    }
+
+   }
+  
 
     stage('Deploy to DEV') {
       when {
