@@ -77,3 +77,36 @@ pipeline {
       steps {
         input message: "Approve deployment to Production?"
       }
+    }
+
+    stage('Deploy to PROD') {
+      when {
+        branch 'main'
+      }
+      steps {
+        sh '''
+          sed -i "s|image: .*|image: ${ECR_REPO}:${IMAGE_TAG}|g" k8s/deployment-prod.yaml
+          kubectl apply -f k8s/deployment-prod.yaml
+          kubectl apply -f k8s/service-prod.yaml
+          kubectl apply -f k8s/ingress-prod.yaml
+        '''
+      }
+    }
+
+    stage('Cleanup') {
+      steps {
+        sh 'docker system prune -f'
+      }
+    }
+
+  }
+
+  post {
+    success {
+      echo '✅ Pipeline completed successfully!'
+    }
+    failure {
+      echo '❌ Pipeline failed!'
+    }
+  }
+}
